@@ -18,7 +18,7 @@ async function ProductsContainer({
   const searchTerm = search ? `&search=${search}` : "";
   return (
     <>
-      {/* header */}
+      {/* HEADER */}
       <section>
         <div className="flex justify-between items-center">
           <h4 className="font-medium text-lg">
@@ -47,11 +47,11 @@ async function ProductsContainer({
         </div>
         <Separator className="mt-4" />
       </section>
-      {/* Products */}
+      {/* PRODUCTS */}
       <div>
         {totalProducts === 0 ? (
           <h5 className="text-2xl mt-16">
-            No products matched with your search...
+            Sorry, no products matched your search...
           </h5>
         ) : layout === "grid" ? (
           <ProductsGrid products={products} />

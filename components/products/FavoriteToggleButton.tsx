@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { FaHeart } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 function FavoriteToggleButton({ productId }: { productId: string }) {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { FaStar } from "react-icons/fa";
 
 function ProductRating({ productId }: { productId: string }) {

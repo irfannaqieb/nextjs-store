@@ -15,6 +15,7 @@ function Sidebar() {
         const variant = isActivePage ? "default" : "ghost";
         return (
           <Button
+            key={link.href}
             asChild
             className="w-full mb-2 capitalize font-normal justify-start"
             variant={variant}

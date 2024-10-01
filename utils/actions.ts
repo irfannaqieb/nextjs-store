@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use server";
+
 import db from "@/utils/db";
 import { redirect } from "next/navigation";
 export const fetchFeaturedProducts = async () => {
@@ -34,4 +37,12 @@ export const fetchSingleProduct = async (productId: string) => {
     redirect("/products");
   }
   return product;
+};
+
+export const createProductAction = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  return { message: "product created" };
 };

@@ -36,7 +36,7 @@ function validateImageFile() {
     .instanceof(File)
     .refine((file) => {
       return !file || file.size <= maxUploadSize;
-    }, "File size must be less than 1MB")
+    }, `File size must be less than 1 MB`)
     .refine((file) => {
       return (
         !file || acceptedFileTypes.some((type) => file.type.startsWith(type))

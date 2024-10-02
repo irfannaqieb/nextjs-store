@@ -5,6 +5,7 @@ import db from "@/utils/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { imageSchema, productSchema, validateWithZodSchema } from "./schemas";
+import { uploadImage } from "./supabase";
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -62,27 +63,34 @@ export const createProductAction = async (
   formData: FormData
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
-  if (!user) {
-    redirect("/");
-  }
+
   try {
     const rawData = Object.fromEntries(formData);
-    const file = formData.get("image") as File; // get the image file from the form data
-    const validateFields = validateWithZodSchema(productSchema, rawData); // validate rawData against productSchema
-    const validateFile = validateWithZodSchema(imageSchema, file);
-    console.log(validateFile);
+    const file = formData.get("image") as File;
 
-    // creates a new product entry in the database
+    console.log("Raw Data:", rawData);
+    console.log("File:", file);
+
+    const validatedFields = validateWithZodSchema(productSchema, rawData);
+    const validatedFile = validateWithZodSchema(imageSchema, { image: file });
+
+    console.log("Validated Fields:", validatedFields);
+    console.log("Validated File:", validatedFile);
+
+    const fullPath = await uploadImage(validatedFile.image);
+
+    console.log("Full Path:", fullPath);
+
     await db.product.create({
       data: {
-        ...validateFields,
-        image: "/images/product-3.jpg",
+        ...validatedFields,
+        image: fullPath,
         clerkId: user.id,
       },
     });
-
-    return { message: "product created" };
   } catch (error) {
+    console.error("Error:", error);
     return renderError(error);
   }
+  redirect("/admin/products");
 };

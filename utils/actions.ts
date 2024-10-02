@@ -4,6 +4,7 @@
 import db from "@/utils/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { productSchema, validateWithZodSchema } from "./schemas";
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -27,6 +28,7 @@ export const fetchFeaturedProducts = async () => {
   return products;
 };
 
+// Fetch all products
 export const fetchAllProducts = ({ search = "" }: { search: string }) => {
   return db.product.findMany({
     where: {
@@ -64,26 +66,18 @@ export const createProductAction = async (
     redirect("/");
   }
   try {
-    //  extracts various fields from the formData object
-    const name = formData.get("name") as string;
-    const company = formData.get("company") as string;
-    const price = Number(formData.get("price") as string);
-    // temp
-    const image = formData.get("image") as File;
-    const description = formData.get("description") as string;
-    const featured = Boolean(formData.get("featured") as string);
+    const rawData = Object.fromEntries(formData);
+    const validateFields = validateWithZodSchema(productSchema, rawData); // validate rawData against productSchema
 
+    // creates a new product entry in the database
     await db.product.create({
       data: {
-        name,
-        company,
-        price,
-        image: "/images/hero-1.jpg",
-        description,
-        featured,
-        clerkId: user.id, // Associate the product with the user who created it
+        ...validateFields,
+        image: "/images/product-3.jpg",
+        clerkId: user.id,
       },
     });
+
     return { message: "product created" };
   } catch (error) {
     return renderError(error);

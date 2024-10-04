@@ -5,7 +5,8 @@ import db from "@/utils/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { imageSchema, productSchema, validateWithZodSchema } from "./schemas";
-import { uploadImage } from "./supabase";
+import { deleteImage, uploadImage } from "./supabase";
+import { revalidatePath } from "next/cache";
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -85,18 +86,10 @@ export const createProductAction = async (
     const rawData = Object.fromEntries(formData);
     const file = formData.get("image") as File;
 
-    console.log("Raw Data:", rawData);
-    console.log("File:", file);
-
     const validatedFields = validateWithZodSchema(productSchema, rawData);
     const validatedFile = validateWithZodSchema(imageSchema, { image: file });
 
-    console.log("Validated Fields:", validatedFields);
-    console.log("Validated File:", validatedFile);
-
     const fullPath = await uploadImage(validatedFile.image);
-
-    console.log("Full Path:", fullPath);
 
     await db.product.create({
       data: {
@@ -110,4 +103,21 @@ export const createProductAction = async (
     return renderError(error);
   }
   redirect("/admin/products");
+};
+
+export const deleteProductAction = async (prevState: { productId: string }) => {
+  const { productId } = prevState;
+  await getAdminUser();
+  try {
+    const product = await db.product.delete({
+      where: {
+        id: productId,
+      },
+    });
+    await deleteImage(product.image);
+    revalidatePath("/admin/products");
+    return { message: "product removed" };
+  } catch (error) {
+    return renderError(error);
+  }
 };

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
 import db from "@/utils/db";
@@ -8,18 +7,21 @@ import { imageSchema, productSchema, validateWithZodSchema } from "./schemas";
 import { deleteImage, uploadImage } from "./supabase";
 import { revalidatePath } from "next/cache";
 
+// make sure user is authenticated
 const getAuthUser = async () => {
   const user = await currentUser();
   if (!user) redirect("/");
   return user;
 };
 
+// make sure user is an admin
 const getAdminUser = async () => {
   const user = await getAuthUser();
   if (user.id !== process.env.ADMIN_USER_ID) redirect("/");
   return user;
 };
 
+// render error message if an error occurs
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
   return {
@@ -27,6 +29,7 @@ const renderError = (error: unknown): { message: string } => {
   };
 };
 
+// fetch featured products
 export const fetchFeaturedProducts = async () => {
   const products = await db.product.findMany({
     where: {
@@ -52,6 +55,7 @@ export const fetchAllProducts = ({ search = "" }: { search: string }) => {
   });
 };
 
+// Fetch single product
 export const fetchSingleProduct = async (productId: string) => {
   const product = await db.product.findUnique({
     where: {
@@ -64,7 +68,6 @@ export const fetchSingleProduct = async (productId: string) => {
   return product;
 };
 
-//
 export const fetchAdminProduct = async () => {
   await getAdminUser();
   const products = await db.product.findMany({
@@ -117,6 +120,72 @@ export const deleteProductAction = async (prevState: { productId: string }) => {
     await deleteImage(product.image);
     revalidatePath("/admin/products");
     return { message: "product removed" };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const fetchAdminProductDetails = async (productId: string) => {
+  await getAdminUser();
+  const product = await db.product.findUnique({
+    where: {
+      id: productId,
+    },
+  });
+  if (!product) redirect("/admin/products");
+  return product;
+};
+
+export const updateProductAction = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prevState: any,
+  formData: FormData
+) => {
+  await getAdminUser();
+  try {
+    const productId = formData.get("id") as string;
+    const rawData = Object.fromEntries(formData);
+    const validatedFields = validateWithZodSchema(productSchema, rawData);
+
+    await db.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        ...validatedFields,
+      },
+    });
+    revalidatePath(`/admin/products/${productId}/edit`);
+    return { message: "Product updated" };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const updateProductImageAction = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prevState: any,
+  formData: FormData
+) => {
+  await getAuthUser();
+  try {
+    const image = formData.get("image") as File;
+    const productId = formData.get("id") as string;
+    const oldImageUrl = formData.get("url") as string;
+
+    const validatedFile = validateWithZodSchema(imageSchema, { image });
+    const fullPath = await uploadImage(validatedFile.image);
+    await deleteImage(oldImageUrl);
+    await db.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        image: fullPath,
+      },
+    });
+    revalidatePath(`/admin/products/${productId}/edit`);
+    return { message: "Product image updated" };
   } catch (error) {
     return renderError(error);
   }

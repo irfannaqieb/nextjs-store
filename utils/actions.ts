@@ -190,3 +190,22 @@ export const updateProductImageAction = async (
     return renderError(error);
   }
 };
+
+// check if the if it is favorite in the database or not
+export const fetchFavoriteId = async ({ productId }: { productId: string }) => {
+  const user = await getAuthUser();
+  const favorite = await db.favorite.findFirst({
+    where: {
+      productId,
+      clerkId: user.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+  return favorite?.id || null;
+};
+
+export const toggleFavoriteActions = async () => {
+  return { message: "Toggle favorite action" };
+};

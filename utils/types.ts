@@ -1,3 +1,9 @@
+import { Prisma } from "@prisma/client";
+
+export type CartItemWithProduct = Prisma.CartItemGetPayload<{
+  include: { product: true };
+}>;
+
 export type actionFunction = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prevState: any,

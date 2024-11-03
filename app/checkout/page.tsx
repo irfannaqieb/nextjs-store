@@ -8,6 +8,32 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 
+// Initialize Stripe in our App
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 );
+
+function CheckoutPage() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId"); // extract orderId from URL
+  const cartId = searchParams.get("cartId"); // extract cartId from URL
+
+  const fetchClientSecret = useCallback(async () => {
+    const response = await axios.post("/api/payment", {
+      orderId,
+      cartId,
+    });
+    return response.data.clientSecret;
+  }, []);
+
+  const options = { fetchClientSecret };
+
+  return (
+    <div id="checkout">
+      <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
+  );
+}
+export default CheckoutPage;

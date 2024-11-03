@@ -590,6 +590,78 @@ export const updateCartItemAction = async ({
   }
 };
 
+// Create an order
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const createOrderAction = async (prevState: any, formData: FormData) => {
-  return { message: "Order created" };
+  const user = await getAuthUser(); // get user
+  let orderId: null | string = null;
+  let cartId: null | string = null;
+  try {
+    const cart = await fetchOrCreateCart({
+      // fetch the cart
+      userId: user.id,
+      errorOnFailure: true,
+    });
+    cartId = cart.id;
+
+    // remove all the instances where isPaid is false
+    await db.order.deleteMany({
+      where: {
+        clerkId: user.id,
+        isPaid: false,
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const order = await db.order.create({
+      data: {
+        clerkId: user.id,
+        products: cart.numItemsInCart,
+        orderTotal: cart.orderTotal,
+        tax: cart.tax,
+        shipping: cart.shipping,
+        email: user.emailAddresses[0].emailAddress,
+      },
+    });
+    // delete the cart when order is created
+    await db.cart.delete({
+      where: {
+        id: cart.id,
+      },
+    });
+    orderId = order.id;
+  } catch (error) {
+    return renderError(error);
+  }
+
+  // redirect to checkout page
+  redirect(`/checkout?orderId=${orderId}&cartId=${cartId}`);
+};
+
+export const fetchUserOrders = async () => {
+  const user = await getAuthUser();
+  const orders = await db.order.findMany({
+    where: {
+      clerkId: user.id,
+      isPaid: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return orders;
+};
+
+export const fetchAdminOrders = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const user = await getAdminUser();
+  const orders = await db.order.findMany({
+    where: {
+      isPaid: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return orders;
 };

@@ -5,4 +5,11 @@ export const formatCurrency = (amount: number | null) => {
     currency: "MYR",
   }).format(value);
 };
-  
+
+export const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat("ms-MY", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+};

@@ -7,12 +7,15 @@ import LinksDropdown from "./LinksDropdown";
 import { Suspense } from "react";
 function Navbar() {
   return (
-    <nav className="border-b">
-      <Container className="flex flex-col sm:flex-row sm:justify-between sm:items-center sm:gap-4 flex-wrap py-8  ">
+    <nav className="border-b ">
+      <Container className="flex flex-row justify-between sm:flex-row sm:justify-between sm:items-center flex-wrap py-8 gap-4 ">
         <Logo />
         <Suspense>
-          <NavSearch />
+          <div className="hidden md:block">
+            <NavSearch />
+          </div>
         </Suspense>
+
         <div className="flex gap-4 items-center">
           <CartButton />
           <DarkMode />
